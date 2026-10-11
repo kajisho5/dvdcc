@@ -1,3 +1,5 @@
+<p><img src="docs/images/logo/lockup-dark.svg" alt="dvdcc" height="56"></p>
+
 # dvdcc
 
 Put **line-21 closed captions** (CEA-608, CC1) into the MPEG-2 video of a
@@ -72,6 +74,15 @@ The tests cover:
 
 dvdcc was first written for [oncemore](https://github.com/kajisho5/oncemore),
 a DVD and Blu-ray authoring app.
+
+## Support
+
+dvdcc is free and stays free. If it saves you time, you can support its
+development through [GitHub Sponsors](https://github.com/sponsors/kajisho5)
+(the **Sponsor** button at the top of this repository). Bug reports help just
+as much: [Issues](https://github.com/kajisho5/dvdcc/issues).
+
+The logo, colours and writing rules: [docs/DESIGN.md](docs/DESIGN.md).
 
 ## License
 

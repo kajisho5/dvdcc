@@ -1,3 +1,5 @@
+<p><img src="docs/images/logo/lockup-dark.svg" alt="dvdcc" height="56"></p>
+
 # dvdcc
 
 **DVD** の MPEG-2 映像に、**ライン 21 のクローズドキャプション**（CEA-608、CC1）を入れます。再エンコードはせず、Python だけで動き、依存ライブラリはありません。
@@ -56,6 +58,12 @@ python -m unittest discover -s tests -t .
 * dvdauthor もある場合：オーサリングしたディスクの VOB からキャプションが読め、IFO にライン 21 の印が付いていること
 
 dvdcc は、DVD・Blu-ray オーサリングアプリ [oncemore](https://github.com/kajisho5/oncemore) の一部として作られました。
+
+## 支援する
+
+dvdcc は無料で、これからも無料です。役に立ったら [GitHub Sponsors](https://github.com/sponsors/kajisho5)（このリポジトリ上部の **Sponsor** ボタン）から開発を支援できます。不具合の報告も同じくらい助かります：[Issues](https://github.com/kajisho5/dvdcc/issues)。
+
+ロゴ・色・文章の決まりは [docs/DESIGN.md](docs/DESIGN.md)（英語）にあります。
 
 ## ライセンス
 
