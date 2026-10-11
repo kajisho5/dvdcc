@@ -28,8 +28,14 @@ target H.264 and HEVC (A/53 SEI), not the DVD's MPEG-2 user data.
 ## Install
 
 ```sh
-pip install git+https://github.com/kajisho5/dvdcc
+pip install dvdcc
 ```
+
+A release is made by the version: when the version in `pyproject.toml`
+(and `dvdcc/__init__.py`) reaches `main` without a tag of its own,
+`.github/workflows/release.yml` runs the tests, builds the package, makes
+the GitHub release with its tag and publishes to PyPI (trusted publishing,
+environment `pypi`). Merging the version bump is all it takes.
 
 ## Use
 
