@@ -18,8 +18,10 @@ DVD のキャプションを読み出すツールはありますが、入れる�
 ## インストール
 
 ```sh
-pip install git+https://github.com/kajisho5/dvdcc
+pip install dvdcc
 ```
+
+リリースはバージョン番号で決まります。`pyproject.toml`（と `dvdcc/__init__.py`）のバージョンがまだタグの無い番号で `main` に入ると、`.github/workflows/release.yml` がテスト・ビルド・タグ付きの GitHub リリース・PyPI 公開（trusted publishing、環境 `pypi`）まで行います。バージョンを上げた PR をマージするだけで済みます。
 
 ## 使い方
 
