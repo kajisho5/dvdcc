@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,13 +7,13 @@ name = "dvdcc"
 version = "0.1.0"
 description = "Line-21 (CEA-608) closed captions for DVD-Video: Scenarist SCC or subtitles into MPEG-2 GOP user data"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.11"
 dependencies = []
 authors = [{ name = "kajisho5" }]
 keywords = ["closed captions", "cea-608", "line 21", "dvd", "scc", "mpeg-2"]
 classifiers = [
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
   "Topic :: Multimedia :: Video",
