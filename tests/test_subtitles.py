@@ -49,6 +49,19 @@ class TestSrt(unittest.TestCase):
         self.addCleanup(os.remove, f.name)
         self.assertEqual(subtitles.load_subtitles(f.name)[0].lines, ["日本語の字幕"])
 
+    def test_load_utf16(self):
+        # (with a byte order mark, and without)
+        text = "1\r\n00:00:01,000 --> 00:00:02,000\r\n日本語の字幕\r\n"
+        for enc in ("utf-16", "utf-16-le", "utf-16-be"):
+            with tempfile.NamedTemporaryFile("wb", suffix=".srt", delete=False) as f:
+                f.write(text.encode(enc))
+            self.addCleanup(os.remove, f.name)
+            self.assertEqual(subtitles.load_subtitles(f.name)[0].lines, ["日本語の字幕"], enc)
+        with tempfile.NamedTemporaryFile("wb", suffix=".txt", delete=False) as f:
+            f.write("1 00;00;01;00 00;00;02;00 Hello\n".encode("utf-16"))
+        self.addCleanup(os.remove, f.name)
+        self.assertEqual(subtitles.load_subtitles(f.name)[0].lines, ["Hello"])
+
     def test_load_reports_file(self):
         with tempfile.NamedTemporaryFile("w", suffix=".srt", delete=False) as f:
             f.write("1\n12:00 --> x\nbad\n")

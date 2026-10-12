@@ -261,6 +261,21 @@ PARSERS = {".srt": parse_srt, ".vtt": parse_vtt, ".ass": parse_ass, ".ssa": pars
            ".txt": parse_text_script}
 
 
+def _encodings(raw):
+    """The encodings to try on a subtitle file: UTF-16 when it has a byte
+    order mark or its every other byte is 0 (subtitle scripts are often
+    saved as UTF-16), else UTF-8, Shift_JIS, Latin-1."""
+    if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return ("utf-16",)
+    if len(raw) >= 4:
+        half = len(raw) // 2
+        if raw[1::2].count(0) > half * 0.4 and not raw[0::2].count(0):
+            return ("utf-16-le",)
+        if raw[0::2].count(0) > half * 0.4 and not raw[1::2].count(0):
+            return ("utf-16-be",)
+    return ("utf-8-sig", "cp932", "latin-1")
+
+
 def load_subtitles(path, standard="NTSC"):
     """Cues of a subtitle file (timecodes of a text script are the disc
     `standard`'s)."""
@@ -271,7 +286,7 @@ def load_subtitles(path, standard="NTSC"):
         parse = lambda text: parse_text_script(text, standard, base)     # noqa: E731
     with open(path, "rb") as f:
         raw = f.read()
-    for enc in ("utf-8-sig", "cp932", "latin-1"):
+    for enc in _encodings(raw):
         try:
             return parse(raw.decode(enc))
         except UnicodeDecodeError:
