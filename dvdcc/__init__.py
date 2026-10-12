@@ -7,4 +7,4 @@ in place, without re-encoding. Author the disc with the titleset marked as
 having line-21 captions (dvdauthor: <video caption="field1"/>).
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

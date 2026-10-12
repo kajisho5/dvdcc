@@ -7,8 +7,8 @@ Put **line-21 closed captions** (CEA-608, CC1) into the MPEG-2 video of a
 
 * **From a Scenarist (.scc) file:** the byte pairs caption tools write are
   used as they are, from the frame of their timecode.
-* **From subtitles** (SubRip, WebVTT, ASS / SSA, text scripts): each is sent as
-  a pop-on caption.
+* **From subtitles** (SubRip, WebVTT, ASS / SSA, text scripts; UTF-8, UTF-16
+  or Shift_JIS): each is sent as a pop-on caption.
   * It is loaded into the hidden memory before its time, shown at its start,
     and erased at its end.
   * Long lines are wrapped to 32 columns and 4 rows.
