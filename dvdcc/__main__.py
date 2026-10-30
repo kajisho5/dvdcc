@@ -1,10 +1,13 @@
-"""Command line: `dvdcc VIDEO.m2v CAPTIONS [-o OUT] [--offset T] [--top]`."""
+"""Command line: `dvdcc VIDEO.m2v CAPTIONS [-o OUT] [--offset T] [--top]`, and
+`dvdcc contract [--json]` for the machine-readable contract."""
 
 import argparse
+import json
 import shutil
 import sys
 
 from . import __version__, captions
+from .contract import contract
 from .errors import CaptionError
 from .subtitles import timecode_seconds
 
@@ -17,6 +20,10 @@ def _offset(value):
 
 
 def main(argv=None):
+    args = sys.argv[1:] if argv is None else list(argv)
+    if args in (["contract"], ["contract", "--json"]):
+        print(json.dumps(contract(), indent=2))
+        return 0
     p = argparse.ArgumentParser(
         prog="dvdcc", description="Put line-21 closed captions (CEA-608, CC1) into the MPEG-2 "
         "video of a DVD (29.97 fps NTSC), without re-encoding it.")

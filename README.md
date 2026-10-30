@@ -42,6 +42,7 @@ environment `pypi`). Merging the version bump is all it takes.
 ```sh
 dvdcc video.m2v captions.scc              # in place
 dvdcc video.m2v subs.srt -o captioned.m2v --offset 01;00;00;00
+dvdcc contract --json                     # machine-readable contract (AI Video Production OS registry)
 ```
 
 ```python
