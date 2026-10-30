@@ -28,6 +28,7 @@ pip install dvdcc
 ```sh
 dvdcc video.m2v captions.scc              # 映像ファイルをそのまま書き換え
 dvdcc video.m2v subs.srt -o captioned.m2v --offset 01;00;00;00
+dvdcc contract --json                     # machine-readable contract (AI Video Production OS registry)
 ```
 
 ```python
