@@ -23,6 +23,9 @@ Not reachable from the agent; encodes with ffmpeg directly.
 
 - [x] **1. (optional) Contract in the OS schema** — skill_id, version, provides[]
   - Done when: validates against the OS schema
+- [ ] **2. Captions from subtitle-skill with 608 limits reported** — read subtitle-skill SRT / VTT, apply CEA-608 limits (32 columns, rows, roll-up or pop-on) and report every cue that cannot be carried as written (characters outside 608's set such as Japanese, overlong lines) instead of dropping it. Field review 2026-11-05 (Velisa ROADMAP, third round)
+  - なぜ要るか：英語のクローズドキャプション付き DVD を、字幕データから欠けなく作れる。日本語が載らないことも事前に分かる
+  - Done when: a fixture with one 40-character line and one Japanese line reports both
 
 ## Boundaries
 
