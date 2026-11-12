@@ -11,6 +11,13 @@ them back into text. They come from
   text is loaded into the hidden memory before its time, shown at its start
   (end of caption) and erased at its end.
 
+A pop-on caption is at most 4 rows of 32 characters from the CEA-608 basic
+set (ASCII less a few, plus some accented letters). What a subtitle has
+beyond that cannot be carried as written: `check` reports it cue by cue
+(characters with no caption character, such as Japanese, become spaces;
+longer lines are wrapped; rows past the fourth are left out), and the
+caption is still sent, so nothing is dropped without a word.
+
 Captions are NTSC only (line 21 of a 525-line picture), on 29.97 fps
 video, field 1 (CC1).
 """
@@ -24,6 +31,7 @@ from .errors import CaptionError
 
 FPS = 30000 / 1001
 COLUMNS = 32
+ROWS = 4                       # rows of a pop-on caption (dvdcc's, and the usual)
 FILLER = (0x80, 0x80)          # no data (two nulls with odd parity)
 
 # preamble address code, first and second byte base, for rows 1..15
@@ -65,7 +73,7 @@ def text_pairs(text):
     for ch in text:
         if ch in _SPECIAL:
             codes.append(_SPECIAL[ch])
-        elif " " <= ch <= "~" and ch not in _NOT_BASIC:
+        elif has_character(ch):
             codes.append(ord(ch))
         else:
             codes.append(0x20)
@@ -75,8 +83,14 @@ def text_pairs(text):
     return [pair(a, b) for a, b in zip(codes[0::2], codes[1::2])], dropped
 
 
-def wrap(lines):
-    """Caption rows of at most 32 characters (words wrapped), at most 4."""
+def has_character(ch):
+    """Whether the CEA-608 basic set (as dvdcc sends it) has `ch`."""
+    return ch in _SPECIAL or (" " <= ch <= "~" and ch not in _NOT_BASIC)
+
+
+def wrap(lines, rows_max=ROWS):
+    """Caption rows of at most 32 characters (words wrapped), at most
+    `rows_max` (None: all of them)."""
     rows = []
     for line in lines:
         words, cur = line.split(), ""
@@ -96,7 +110,7 @@ def wrap(lines):
                 cur = w
         if cur:
             rows.append(cur)
-    return rows[:4]
+    return rows if rows_max is None else rows[:rows_max]
 
 
 def frame_of(t):
@@ -129,15 +143,63 @@ class Schedule:
         return [self.frames.get(f, FILLER) for f in range(count)]
 
 
+def _clock(t):
+    h, rest = divmod(round(t * 1000), 3_600_000)
+    m, rest = divmod(rest, 60_000)
+    return f"{h:02d}:{m:02d}:{rest // 1000:02d}.{rest % 1000:03d}"
+
+
+def check(cues):
+    """What of each cue a pop-on caption cannot carry as written, as a list
+    of dicts: cue (its number, from 1), start, end, kind ("characters",
+    "long_line", "long_word", "rows", "vertical"), message, and the cue's
+    text. Nothing is reported for a cue that fits."""
+    problems = []
+    for n, c in enumerate(cues, 1):
+        if c.image:
+            continue
+
+        def say(kind, message):
+            problems.append({"cue": n, "start": round(c.start, 3), "end": round(c.end, 3),
+                             "kind": kind, "message": f"cue {n} at {_clock(c.start)}: {message}",
+                             "text": "\n".join(c.lines)})
+
+        text = "".join(c.lines)
+        missing = [ch for ch in text if not ch.isspace() and not has_character(ch)]
+        if missing:
+            shown = "".join(dict.fromkeys(missing))
+            more = "..." if len(shown) > 10 else ""
+            say("characters", f"{len(missing)} character(s) have no closed-caption character "
+                f"and become spaces: {shown[:10]}{more}")
+        for k, line in enumerate(c.lines, 1):
+            width = len(" ".join(line.split()))
+            if width > COLUMNS:
+                rows = len(wrap([line], None))
+                say("long_line", f"line {k} is {width} characters, a caption row holds "
+                    f"{COLUMNS}: wrapped onto {rows} rows")
+            for w in line.split():
+                if len(w) > COLUMNS:
+                    say("long_word", f"\"{w[:20]}...\" is {len(w)} characters without a "
+                        f"space: cut across rows")
+        rows = wrap(c.lines, None)
+        if len(rows) > ROWS:
+            lost = " ".join(rows[ROWS:])
+            say("rows", f"needs {len(rows)} rows, a pop-on caption shows {ROWS}: "
+                f"\"{lost[:40]}{'...' if len(lost) > 40 else ''}\" is left out")
+        if getattr(c, "vertical", False):
+            say("vertical", "is written vertically; captions run across: sent horizontally")
+    return problems
+
+
 def from_cues(cues, position="bottom"):
     """A Schedule from subtitles: one pop-on caption each. Returns
-    (schedule, notes)."""
+    (schedule, notes): one note for each thing `check` finds (what a caption
+    cannot carry as written) and for each caption shown late."""
     s = Schedule()
-    notes = []
-    dropped = 0
+    notes = [p["message"] for p in check(cues)]
     shown_until = -1            # the frame the last caption was shown at (its EOC)
     last_end = None
-    for c in cues:
+    for n, c in enumerate(cues, 1):
         rows = wrap(c.lines)
         if not rows:
             continue
@@ -147,8 +209,7 @@ def from_cues(cues, position="bottom"):
         for k, row in enumerate(rows):
             col = (COLUMNS - len(row)) // 2
             p = pac(first_row + k, col)
-            chars, d = text_pairs(" " * (col % 4) + row)
-            dropped += d
+            chars, _ = text_pairs(" " * (col % 4) + row)
             load += [p, p] + chars
         start, end = frame_of(c.start), frame_of(c.end)
         # load into the hidden memory after the previous caption went up
@@ -157,7 +218,7 @@ def from_cues(cues, position="bottom"):
         loaded = s.put_from(first, load)
         show = max(start, loaded + 1)
         if show > start + 2:
-            notes.append(f"a caption at {c.start:.2f}s is {(show - start) / FPS:.2f}s late "
+            notes.append(f"cue {n} at {_clock(c.start)}: shown {(show - start) / FPS:.2f}s late "
                          "(too much text since the previous one)")
         if last_end is not None and last_end < show:
             s.put_from(last_end, [EDM, EDM])       # the previous one goes at its end
@@ -165,8 +226,6 @@ def from_cues(cues, position="bottom"):
         last_end = max(end, shown_until + 1)
     if last_end is not None:
         s.put_from(last_end, [EDM, EDM])
-    if dropped:
-        notes.append(f"{dropped} character(s) have no closed-caption character and became spaces")
     return s, notes
 
 

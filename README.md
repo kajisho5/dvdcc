@@ -42,13 +42,26 @@ environment `pypi`). Merging the version bump is all it takes.
 ```sh
 dvdcc video.m2v captions.scc              # in place
 dvdcc video.m2v subs.srt -o captioned.m2v --offset 01;00;00;00
+dvdcc check subs.srt                      # what captions cannot carry as written, cue by cue
 dvdcc contract --json                     # machine-readable contract (AI Video Production OS registry)
+```
+
+A pop-on caption holds 4 rows of 32 characters from the caption character
+set. `dvdcc check` (or `--json`) names every cue that goes past that, and
+what happens to it; a caption run sends every cue all the same and prints
+the same lines as notes:
+
+```text
+$ dvdcc check tests/fixtures/subtitle_skill.srt
+tests/fixtures/subtitle_skill.srt: cue 2 at 00:00:03.500: line 1 is 40 characters, a caption row holds 32: wrapped onto 2 rows
+tests/fixtures/subtitle_skill.srt: cue 3 at 00:00:06.500: 8 character(s) have no closed-caption character and become spaces: 日本語の字幕です
+tests/fixtures/subtitle_skill.srt: 2 of 4 cue(s) cannot be carried as written
 ```
 
 ```python
 from dvdcc import captions
 
-schedule, notes = captions.load("subs.srt")      # or a .scc
+schedule, notes = captions.load("subs.srt")      # or a .scc; notes: what did not fit
 frames = captions.inject_file("video.m2v", schedule)
 ```
 
@@ -73,6 +86,8 @@ The tests cover:
 
 * the caption bytes: parity, preamble address codes, the character set;
 * pop-on timing and Scenarist parsing;
+* the limits report: subtitle files as subtitle-skill writes them, with a
+  40-character line and a Japanese line, both reported;
 * the user data layout;
 * with ffmpeg, captions put into a test video that **ffmpeg's own caption
   decoder** (lavfi `subcc`) reads back as the text at the right times;

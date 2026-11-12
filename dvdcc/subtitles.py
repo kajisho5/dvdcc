@@ -3,6 +3,7 @@
 timecodes."""
 
 import dataclasses
+import html
 import os
 import re
 from dataclasses import dataclass
@@ -11,6 +12,8 @@ from .errors import CaptionError
 
 _TIME = re.compile(r"(\d+):(\d{1,2}):(\d{1,2})[,.](\d{1,3})")
 _TAG = re.compile(r"</?[a-zA-Z][^>]*>|\{\\[^}]*\}")
+# a ruby reading (WebVTT <rt>, HTML <rp> brackets): not part of the line's text
+_RUBY_TEXT = re.compile(r"<(rt|rp)\b[^>]*>.*?</\1>", re.S)
 
 
 @dataclass
@@ -22,6 +25,7 @@ class Cue:
     color: str = None      # "#RRGGBB" fill colour from the cue itself, or None
     style_color: str = None  # the subtitle file's style colour (after the track's)
     image: str = None      # an image script's picture (absolute path): no text
+    vertical: bool = False  # WebVTT "vertical:rl" / "vertical:lr": written top to bottom
 
 
 _AN = re.compile(r"\\an?(\d)")
@@ -77,10 +81,13 @@ def parse_srt(text, vtt=False):
             if m:
                 v = float(m.group(1))
                 pos = "top" if (0 <= v < 50 if m.group(2) else 0 <= v < 6) else "bottom"
-        body = [_TAG.sub("", l).strip() for l in raw_body]
+        body = [_TAG.sub("", _RUBY_TEXT.sub("", l)).strip() for l in raw_body]
+        if vtt:
+            body = [html.unescape(l) for l in body]       # &amp; &lt; &gt; ...
         body = [l for l in body if l]
         if body and end > start:
-            cues.append(Cue(start, end, body, pos, color))
+            cues.append(Cue(start, end, body, pos, color,
+                            vertical=vtt and bool(re.search(r"\bvertical:(rl|lr)\b", lines[idx]))))
     return _tidy(cues)
 
 
