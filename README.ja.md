@@ -28,13 +28,23 @@ pip install dvdcc
 ```sh
 dvdcc video.m2v captions.scc              # 映像ファイルをそのまま書き換え
 dvdcc video.m2v subs.srt -o captioned.m2v --offset 01;00;00;00
+dvdcc check subs.srt                      # キャプションにそのまま載らないものを字幕ごとに表示
 dvdcc contract --json                     # machine-readable contract (AI Video Production OS registry)
+```
+
+ポップオンのキャプションに入るのは、キャプションの文字セットの文字で 32 文字 × 4 行までです。`dvdcc check`（`--json` も可）は、それを超える字幕をすべて挙げ、どう扱われるかを示します。キャプションを入れるときも字幕は全部送り、同じ内容を note として出します。日本語はキャプションの文字セットにないため、事前に分かります。
+
+```text
+$ dvdcc check tests/fixtures/subtitle_skill.srt
+tests/fixtures/subtitle_skill.srt: cue 2 at 00:00:03.500: line 1 is 40 characters, a caption row holds 32: wrapped onto 2 rows
+tests/fixtures/subtitle_skill.srt: cue 3 at 00:00:06.500: 8 character(s) have no closed-caption character and become spaces: 日本語の字幕です
+tests/fixtures/subtitle_skill.srt: 2 of 4 cue(s) cannot be carried as written
 ```
 
 ```python
 from dvdcc import captions
 
-schedule, notes = captions.load("subs.srt")      # .scc も可
+schedule, notes = captions.load("subs.srt")      # .scc も可。notes は載らなかったもの
 frames = captions.inject_file("video.m2v", schedule)
 ```
 
@@ -56,6 +66,7 @@ python -m unittest discover -s tests -t .
 
 * キャプションのバイト列：パリティ、行・位置の指定コード、文字セット
 * ポップオンのタイミングと Scenarist の読み込み
+* 載らないものの報告：subtitle-skill が書く形の字幕ファイル（40 文字の行と日本語の行を含む）で、両方が報告されること
 * ユーザーデータの並び
 * ffmpeg がある場合：テスト映像に入れたキャプションを、**ffmpeg のキャプションデコーダ**（lavfi の `subcc`）が正しい時刻の文字として読み戻すこと
 * dvdauthor もある場合：オーサリングしたディスクの VOB からキャプションが読め、IFO にライン 21 の印が付いていること
