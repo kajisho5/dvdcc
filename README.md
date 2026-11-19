@@ -46,6 +46,11 @@ dvdcc check subs.srt                      # what captions cannot carry as writte
 dvdcc contract --json                     # machine-readable contract (AI Video Production OS registry)
 ```
 
+`contract/contract.json` is that contract committed as a file (the `contract --json` output,
+unchanged), so any release's contract is `git show vX.Y.Z:contract/contract.json`, with nothing
+installed or run. Regenerate it with `python contract/generate.py` after a contract change or a
+version bump; a unit test fails when it is stale.
+
 A pop-on caption holds 4 rows of 32 characters from the caption character
 set. `dvdcc check` (or `--json`) names every cue that goes past that, and
 what happens to it; a caption run sends every cue all the same and prints
